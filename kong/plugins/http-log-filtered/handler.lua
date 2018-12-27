@@ -1,4 +1,4 @@
-local basic_serializer = require "kong.plugins.log-serializers.basic"
+local filtered_serializer = require "kong.plugins.log-serializers.filtered"
 local BasePlugin = require "kong.plugins.base_plugin"
 local cjson = require "cjson"
 local url = require "socket.url"
@@ -115,7 +115,7 @@ end
 -- @param `conf` plugin configuration table, holds http endpoint details
 -- @return html body as string
 function HttpLogHandler:serialize(ngx, conf)
-  return cjson_encode(basic_serializer.serialize(ngx))
+  return cjson_encode(filtered_serializer.serialize(ngx))
 end
 
 function HttpLogHandler:log(conf)
