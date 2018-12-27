@@ -5,7 +5,16 @@ local _M = {}
 local EMPTY = tablex.readonly({})
 
 local function filter_headers(headers, filter_pairs)
-  return headers
+  filtered = {}
+  for k, v in pairs(headers) do
+    if filter_pairs[k] then
+      filtered[k] = ngx.re.gsub(v, filter_pairs[k], "XX REDACTED XX")
+    else
+      filtered[k] = v
+    end
+  end
+
+  return filtered
 end
 
 function _M.serialize(ngx)
