@@ -6,10 +6,10 @@ local url = require "socket.url"
 local string_format = string.format
 local cjson_encode = cjson.encode
 
-local HttpLogHandler = BasePlugin:extend()
+local HttpLogFilteredHandler = BasePlugin:extend()
 
-HttpLogHandler.PRIORITY = 12
-HttpLogHandler.VERSION = "0.1.0"
+HttpLogFilteredHandler.PRIORITY = 12
+HttpLogFilteredHandler.VERSION = "0.1.0"
 
 local HTTP = "http"
 local HTTPS = "https"
@@ -106,20 +106,20 @@ local function log(premature, conf, body, name)
 end
 
 -- Only provide `name` when deriving from this class. Not when initializing an instance.
-function HttpLogHandler:new(name)
-  HttpLogHandler.super.new(self, name or "http-log")
+function HttpLogFilteredHandler:new(name)
+  HttpLogFilteredHandler.super.new(self, name or "http-log-filtered")
 end
 
 -- serializes context data into an html message body.
 -- @param `ngx` The context table for the request being logged
 -- @param `conf` plugin configuration table, holds http endpoint details
 -- @return html body as string
-function HttpLogHandler:serialize(ngx, conf)
+function HttpLogFilteredHandler:serialize(ngx, conf)
   return cjson_encode(filtered_serializer.serialize(ngx))
 end
 
-function HttpLogHandler:log(conf)
-  HttpLogHandler.super.log(self)
+function HttpLogFilteredHandler:log(conf)
+  HttpLogFilteredHandler.super.log(self)
 
   local ok, err = ngx.timer.at(0, log, conf, self:serialize(ngx, conf), self._name)
   if not ok then
@@ -127,4 +127,4 @@ function HttpLogHandler:log(conf)
   end
 end
 
-return HttpLogHandler
+return HttpLogFilteredHandler
