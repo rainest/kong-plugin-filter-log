@@ -4,6 +4,10 @@ local _M = {}
 
 local EMPTY = tablex.readonly({})
 
+local function filter_headers(headers, filter_pairs)
+  return headers
+end
+
 function _M.serialize(ngx)
   local authenticated_entity
   if ngx.ctx.authenticated_credential ~= nil then
@@ -21,13 +25,13 @@ function _M.serialize(ngx)
       url = ngx.var.scheme .. "://" .. ngx.var.host .. ":" .. ngx.var.server_port .. request_uri,
       querystring = ngx.req.get_uri_args(), -- parameters, as a table
       method = ngx.req.get_method(), -- http method
-      headers = ngx.req.get_headers(),
+      headers = filter_headers(ngx.req.get_headers(), {}),
       size = ngx.var.request_length
     },
     upstream_uri = ngx.var.upstream_uri,
     response = {
       status = ngx.status,
-      headers = ngx.resp.get_headers(),
+      headers = filter_headers(ngx.resp.get_headers(), {}),
       size = ngx.var.bytes_sent
     },
     tries = (ngx.ctx.balancer_data or EMPTY).tries,
