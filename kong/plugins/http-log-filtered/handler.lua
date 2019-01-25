@@ -115,7 +115,7 @@ end
 -- @param `conf` plugin configuration table, holds http endpoint details
 -- @return html body as string
 function HttpLogFilteredHandler:serialize(ngx, conf)
-  return cjson_encode(filtered_serializer.serialize(ngx))
+  return cjson_encode(filtered_serializer.serialize(ngx, conf))
 end
 
 function HttpLogFilteredHandler:log(conf)

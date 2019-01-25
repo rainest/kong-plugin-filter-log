@@ -5,19 +5,18 @@ local _M = {}
 local EMPTY = tablex.readonly({})
 
 local function filter_headers(headers, filter_pairs)
-  filtered = {}
-  for k, v in pairs(headers) do
-    if filter_pairs[k] then
-      filtered[k] = ngx.re.gsub(v, filter_pairs[k], "XX REDACTED XX")
-    else
-      filtered[k] = v
+  if filter_pairs then
+    for header, regex in pairs(filter_pairs) do
+      if headers[header] then
+        headers[string.lower(header)] = ngx.re.gsub(headers[header], regex, "XX REDACTED XX")
+      end
     end
   end
 
-  return filtered
+  return headers
 end
 
-function _M.serialize(ngx)
+function _M.serialize(ngx, conf)
   local authenticated_entity
   if ngx.ctx.authenticated_credential ~= nil then
     authenticated_entity = {
@@ -34,13 +33,13 @@ function _M.serialize(ngx)
       url = ngx.var.scheme .. "://" .. ngx.var.host .. ":" .. ngx.var.server_port .. request_uri,
       querystring = ngx.req.get_uri_args(), -- parameters, as a table
       method = ngx.req.get_method(), -- http method
-      headers = filter_headers(ngx.req.get_headers(), {}),
+      headers = filter_headers(ngx.req.get_headers(), conf.request_header_filters),
       size = ngx.var.request_length
     },
     upstream_uri = ngx.var.upstream_uri,
     response = {
       status = ngx.status,
-      headers = filter_headers(ngx.resp.get_headers(), {}),
+      headers = filter_headers(ngx.resp.get_headers(), conf.response_header_filters),
       size = ngx.var.bytes_sent
     },
     tries = (ngx.ctx.balancer_data or EMPTY).tries,
