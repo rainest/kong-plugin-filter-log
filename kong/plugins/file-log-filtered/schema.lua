@@ -16,6 +16,14 @@ end
 return {
   fields = {
     path = { required = true, type = "string", func = validate_file },
+    request_header_filters = { type = "map",
+        keys = { type = "string" },
+        values = { type = "string" }
+    },
+    response_header_filters = { type = "map",
+        keys = { type = "string" },
+        values = { type = "string" }
+    },
     reopen = { type = "boolean", default = false },
   }
 }
