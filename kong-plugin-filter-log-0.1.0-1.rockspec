@@ -1,11 +1,9 @@
 package = "kong-plugin-filter-log"
 version = "0.1.0-1"
 
-local pluginName = package:match("^kong%-plugin%-(.+)$")  -- "myPlugin"
-
 supported_platforms = {"linux", "macosx"}
 source = {
-  url = "https://github.com/rainest/kong-plugin-filter-log.git",
+  url = "git+https://github.com/rainest/kong-plugin-filter-log.git",
   tag = "0.1.0"
 }
 
