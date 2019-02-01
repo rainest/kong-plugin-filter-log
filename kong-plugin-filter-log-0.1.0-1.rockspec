@@ -1,8 +1,6 @@
 package = "kong-plugin-filter-log"
 version = "0.1.0-1"
 
--- TODO: This is the name to set in the Kong configuration `plugins` setting.
--- Here we extract it from the package name.
 local pluginName = package:match("^kong%-plugin%-(.+)$")  -- "myPlugin"
 
 supported_platforms = {"linux", "macosx"}
@@ -23,7 +21,6 @@ dependencies = {
 build = {
   type = "builtin",
   modules = {
-    -- TODO: add any additional files that the plugin consists of
     ["kong.plugins.file-log-filtered.handler"] = "kong/plugins/file-log-filtered/handler.lua",
     ["kong.plugins.file-log-filtered.schema"] = "kong/plugins/file-log-filtered/schema.lua",
     ["kong.plugins.http-log-filtered.handler"] = "kong/plugins/http-log-filtered/handler.lua",
