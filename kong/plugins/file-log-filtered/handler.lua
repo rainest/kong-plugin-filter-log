@@ -69,7 +69,7 @@ end
 
 function FileLogFilteredHandler:log(conf)
   FileLogFilteredHandler.super.log(self)
-  local message = filtered_serializer.serialize(ngx)
+  local message = filtered_serializer.serialize(ngx, conf)
 
   local ok, err = ngx_timer(0, log, conf, message)
   if not ok then
