@@ -34,7 +34,8 @@ function _M.serialize(ngx, conf)
       querystring = ngx.req.get_uri_args(), -- parameters, as a table
       method = ngx.req.get_method(), -- http method
       headers = filter_headers(ngx.req.get_headers(), conf.request_header_filters),
-      size = ngx.var.request_length
+      size = ngx.var.request_length,
+      body = ngx.ctx.request_body or ""
     },
     upstream_uri = ngx.var.upstream_uri,
     response = {

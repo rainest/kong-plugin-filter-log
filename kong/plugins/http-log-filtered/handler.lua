@@ -60,6 +60,32 @@ local function parse_url(host_url)
   return parsed_url
 end
 
+-- Make the request body always available for later
+-- @param `conf` plugin configuration table
+local function access(conf)
+  local body
+  -- there does not appear to be a way to retrieve body length alone,
+  -- only body + headers. Content-Length is not reliable. As such,
+  -- this always attempts to read the body
+  -- future work: limiters to prevent this from DoSing nginx by
+  -- effectively circumventing the request size buffer
+  --
+  -- true as a temp placeholder for conf option
+  if true then
+    ngx.req.read_body()
+    body = ngx.req.get_body_data()
+    local body_filepath = ngx.req.get_body_file()
+    if not body and body_filepath then
+      local file = io.open(body_filepath, "rb")
+      body = file.read("*all")
+      file:close()
+    end
+  end
+
+  ngx.ctx.request_body = body
+end
+
+
 -- Log to a Http end point.
 -- This basically is structured as a timer callback.
 -- @param `premature` see openresty ngx.timer.at function
