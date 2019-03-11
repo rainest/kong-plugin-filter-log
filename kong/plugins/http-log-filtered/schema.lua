@@ -24,7 +24,8 @@ return {
     },
     body_filters = { type = "array", elements = { type = "string" } },
     log_body = { type = "boolean", default = false },
-    limit_body_size = { type = "boolean", default = false },
+    truncate_body = { type = "boolean", default = true },
+    body_size_limit = { type = "number" },
     keepalive = { default = 60000, type = "number" }
   }
 }

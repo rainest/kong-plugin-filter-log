@@ -85,7 +85,7 @@ local function access(conf)
   -- local length = ngx.var.content_length
   -- local bytes = ngx.var.bytes_received
 
-  local limit = calculate_bytes(singletons.configuration.client_body_buffer_size)
+  local limit = conf.body_size_limit or calculate_bytes(singletons.configuration.client_body_buffer_size)
 
   if conf.log_body then
     ngx.req.read_body()
@@ -93,7 +93,7 @@ local function access(conf)
     local body_filepath = ngx.req.get_body_file()
     if not body and body_filepath then
       local file = io.open(body_filepath, "rb")
-      if conf.limit_body_size then
+      if conf.truncate_body then
         body = file:read(limit)
       else
         body = file:read("*all")
