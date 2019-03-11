@@ -1,4 +1,5 @@
 local filtered_serializer = require "kong.plugins.log-serializers.filtered"
+local singletons =  require "kong.singletons"
 local BasePlugin = require "kong.plugins.base_plugin"
 local cjson = require "cjson"
 local url = require "socket.url"
@@ -60,6 +61,15 @@ local function parse_url(host_url)
   return parsed_url
 end
 
+-- Convert NGINX-style byte notation to raw byte count
+-- @param `bytestring` NGINX-style bytestring
+local function calculate_bytes(bytestring)
+  local conversions = {k = 2^10, m = 2^20, g = 2^30}
+  local suffix = string.sub(bytestring, -1)
+  local count = tonumber(string.sub(bytestring, 1, -2))
+  return count * conversions[suffix]
+end
+
 -- Make the request body always available for later
 -- @param `conf` plugin configuration table
 local function access(conf)
@@ -69,15 +79,25 @@ local function access(conf)
   -- this always attempts to read the body
   -- future work: limiters to prevent this from DoSing nginx by
   -- effectively circumventing the request size buffer
-  --
-  -- true as a temp placeholder for conf option
-  if true then
+
+  -- depending on preference, one of these may be a better alternative
+  -- for now, simplest limit is to cut off at the standard buffer limit
+  -- local length = ngx.var.content_length
+  -- local bytes = ngx.var.bytes_received
+
+  local limit = calculate_bytes(singletons.configuration.client_body_buffer_size)
+
+  if conf.log_body then
     ngx.req.read_body()
     body = ngx.req.get_body_data()
     local body_filepath = ngx.req.get_body_file()
     if not body and body_filepath then
       local file = io.open(body_filepath, "rb")
-      body = file.read("*all")
+      if conf.limit_body_size then
+        body = file:read(limit)
+      else
+        body = file:read("*all")
+      end
       file:close()
     end
   end
@@ -142,6 +162,11 @@ end
 -- @return html body as string
 function HttpLogFilteredHandler:serialize(ngx, conf)
   return cjson_encode(filtered_serializer.serialize(ngx, conf))
+end
+
+function HttpLogFilteredHandler:access(conf)
+  HttpLogFilteredHandler.super.access(self)
+  access(conf)
 end
 
 function HttpLogFilteredHandler:log(conf)

@@ -22,6 +22,9 @@ return {
         keys = { type = "string" },
         values = { type = "string" }
     },
+    body_filters = { type = "array", elements = { type = "string" } },
+    log_body = { type = "boolean", default = false },
+    limit_body_size = { type = "boolean", default = false },
     keepalive = { default = 60000, type = "number" }
   }
 }
