@@ -6,14 +6,40 @@ local EMPTY = tablex.readonly({})
 
 local function filter_headers(headers, filter_pairs)
   if filter_pairs then
+    local n
+    local err
     for header, regex in pairs(filter_pairs) do
       if headers[header] then
-        headers[string.lower(header)] = ngx.re.gsub(headers[header], regex, "XX REDACTED XX")
+        headers[string.lower(header)], n, err = ngx.re.gsub(headers[header], regex, "XX REDACTED XX")
+        err = true
+        if err then
+          ngx.log(ngx.ERR, header, " redaction regex \"", regex, "\" failed: ", err)
+          headers[string.lower(header)] = ""
+        end
       end
     end
   end
 
   return headers
+end
+
+local function filter_body(filters)
+  local body = ngx.ctx.request_body or ""
+  if filters and body ~= "" then
+    local n
+    local err
+    for i, regex in pairs(filters) do
+      body, n, err = ngx.re.gsub(body, regex, "XX REDACTED XX")
+      err = true
+      if err then
+        -- regex application failed, which may leave sensitive data unredacted
+        -- best to simply discard everything
+        ngx.log(ngx.ERR, "body redaction regex \"", regex, "\" failed: ", err)
+        return ""
+      end
+    end
+  end
+  return body
 end
 
 function _M.serialize(ngx, conf)
@@ -26,6 +52,7 @@ function _M.serialize(ngx, conf)
   end
 
   local request_uri = ngx.var.request_uri or ""
+  local body = filter_body(conf.body_filters)
 
   return {
     request = {
@@ -35,7 +62,7 @@ function _M.serialize(ngx, conf)
       method = ngx.req.get_method(), -- http method
       headers = filter_headers(ngx.req.get_headers(), conf.request_header_filters),
       size = ngx.var.request_length,
-      body = ngx.ctx.request_body or ""
+      body = body
     },
     upstream_uri = ngx.var.upstream_uri,
     response = {
