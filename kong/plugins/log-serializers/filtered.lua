@@ -11,7 +11,6 @@ local function filter_headers(headers, filter_pairs)
     for header, regex in pairs(filter_pairs) do
       if headers[header] then
         headers[string.lower(header)], n, err = ngx.re.gsub(headers[header], regex, "XX REDACTED XX")
-        err = true
         if err then
           ngx.log(ngx.ERR, header, " redaction regex \"", regex, "\" failed: ", err)
           headers[string.lower(header)] = ""
@@ -30,7 +29,6 @@ local function filter_body(filters)
     local err
     for i, regex in pairs(filters) do
       body, n, err = ngx.re.gsub(body, regex, "XX REDACTED XX")
-      err = true
       if err then
         -- regex application failed, which may leave sensitive data unredacted
         -- best to simply discard everything
