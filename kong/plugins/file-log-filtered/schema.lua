@@ -24,6 +24,11 @@ return {
         keys = { type = "string" },
         values = { type = "string" }
     },
+    body_filters = { type = "array", elements = { type = "string" } },
+    log_body = { type = "boolean", default = false },
+    truncate_body = { type = "boolean", default = true },
+    read_full_body = { type = "boolean", default = false },
+    body_size_limit = { type = "number" },
     reopen = { type = "boolean", default = false },
   }
 }
