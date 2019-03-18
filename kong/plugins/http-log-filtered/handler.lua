@@ -74,16 +74,6 @@ end
 -- @param `conf` plugin configuration table
 local function access(conf)
   local body
-  -- there does not appear to be a way to retrieve body length alone,
-  -- only body + headers. Content-Length is not reliable. As such,
-  -- this always attempts to read the body
-  -- future work: limiters to prevent this from DoSing nginx by
-  -- effectively circumventing the request size buffer
-
-  -- depending on preference, one of these may be a better alternative
-  -- for now, simplest limit is to cut off at the standard buffer limit
-  -- local length = ngx.var.content_length
-  -- local bytes = ngx.var.bytes_received
 
   local limit = conf.body_size_limit or calculate_bytes(singletons.configuration.client_body_buffer_size)
 
@@ -91,7 +81,7 @@ local function access(conf)
     ngx.req.read_body()
     body = ngx.req.get_body_data()
     local body_filepath = ngx.req.get_body_file()
-    if not body and body_filepath then
+    if not body and body_filepath and conf.read_full_body then
       local file = io.open(body_filepath, "rb")
       if conf.truncate_body then
         body = file:read(limit)
@@ -104,7 +94,6 @@ local function access(conf)
 
   ngx.ctx.request_body = body
 end
-
 
 -- Log to a Http end point.
 -- This basically is structured as a timer callback.
