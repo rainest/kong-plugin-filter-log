@@ -102,8 +102,8 @@ function FileLogFilteredHandler:new()
   FileLogFilteredHandler.super.new(self, "file-log")
 end
 
-function HttpLogFilteredHandler:access(conf)
-  HttpLogFilteredHandler.super.access(self)
+function FileLogFilteredHandler:access(conf)
+  FileLogFilteredHandler.super.access(self)
   access(conf)
 end
 
