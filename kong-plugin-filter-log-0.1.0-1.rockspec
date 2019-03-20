@@ -1,10 +1,10 @@
 package = "kong-plugin-filter-log"
-version = "0.1.0-1"
+version = "0.1.1-1"
 
 supported_platforms = {"linux", "macosx"}
 source = {
   url = "git+https://github.com/rainest/kong-plugin-filter-log.git",
-  tag = "0.1.0"
+  tag = "0.1.1"
 }
 
 description = {
