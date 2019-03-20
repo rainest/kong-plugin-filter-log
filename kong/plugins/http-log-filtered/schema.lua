@@ -1,13 +1,3 @@
-local function check_for_value(value)
-  for i, entry in ipairs(value) do
-    local ok = find(entry, ":")
-    if not ok then
-      return false, "key '" .. entry .. "' has no value"
-    end
-  end
-  return true
-end
-
 return {
   fields = {
     http_endpoint = { required = true, type = "url" },
@@ -22,6 +12,11 @@ return {
         keys = { type = "string" },
         values = { type = "string" }
     },
+    body_filters = { type = "array", elements = { type = "string" } },
+    log_body = { type = "boolean", default = false },
+    truncate_body = { type = "boolean", default = true },
+    read_full_body = { type = "boolean", default = false },
+    body_size_limit = { type = "number" },
     keepalive = { default = 60000, type = "number" }
   }
 }

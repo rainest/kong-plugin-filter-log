@@ -1,4 +1,5 @@
 local filtered_serializer = require "kong.plugins.log-serializers.filtered"
+local singletons =  require "kong.singletons"
 local BasePlugin = require "kong.plugins.base_plugin"
 local cjson = require "cjson"
 local url = require "socket.url"
@@ -60,6 +61,40 @@ local function parse_url(host_url)
   return parsed_url
 end
 
+-- Convert NGINX-style byte notation to raw byte count
+-- @param `bytestring` NGINX-style bytestring
+local function calculate_bytes(bytestring)
+  local conversions = {k = 2^10, m = 2^20, g = 2^30}
+  local suffix = string.sub(bytestring, -1)
+  local count = tonumber(string.sub(bytestring, 1, -2))
+  return count * conversions[suffix]
+end
+
+-- Make the request body always available for later
+-- @param `conf` plugin configuration table
+local function access(conf)
+  local body
+
+  local limit = conf.body_size_limit or calculate_bytes(singletons.configuration.client_body_buffer_size)
+
+  if conf.log_body then
+    ngx.req.read_body()
+    body = ngx.req.get_body_data()
+    local body_filepath = ngx.req.get_body_file()
+    if not body and body_filepath and conf.read_full_body then
+      local file = io.open(body_filepath, "rb")
+      if conf.truncate_body then
+        body = file:read(limit)
+      else
+        body = file:read("*all")
+      end
+      file:close()
+    end
+  end
+
+  ngx.ctx.request_body = body
+end
+
 -- Log to a Http end point.
 -- This basically is structured as a timer callback.
 -- @param `premature` see openresty ngx.timer.at function
@@ -116,6 +151,11 @@ end
 -- @return html body as string
 function HttpLogFilteredHandler:serialize(ngx, conf)
   return cjson_encode(filtered_serializer.serialize(ngx, conf))
+end
+
+function HttpLogFilteredHandler:access(conf)
+  HttpLogFilteredHandler.super.access(self)
+  access(conf)
 end
 
 function HttpLogFilteredHandler:log(conf)
